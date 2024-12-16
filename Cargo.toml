@@ -1,0 +1,10 @@
+[package]
+name = "numjj"
+version = "0.0.0"
+edition = "2021"
+description = "A stack-allocated BigInt implementation"
+keywords = ["number", "bigint", "big", "arithmetic", "large"]
+repository = "https://github.com/prawnydagrate/numjj"
+license = "MIT"
+
+[dependencies]
