@@ -1,6 +1,6 @@
 use std::fmt::{self, write};
 
-pub type Base = u128;
+pub type Base = u64;
 
 #[derive(Debug, Eq, PartialEq, Ord, PartialOrd, Clone)]
 pub struct Uint<const DIGITS: usize = 2>([Base; DIGITS]);
@@ -22,6 +22,21 @@ impl<const DIGITS: usize> Uint<DIGITS> {
         one[0] = 1;
         Self(one)
     }
+
+    /// Implementation of [Donald Ervin Knuth's "Algorithm D"](https://skanthak.hier-im-netz.de/division.html)
+    /// for division. **Panics** if `DIGITS` or `RHS_DIGITS` is less than 1.
+    fn algd<const RHS_DIGITS: usize>(&self, rhs: &Uint<RHS_DIGITS>) {
+        const b: u128 = 2_u128.pow(Base::BITS); // 2^64 doesn't fit in a u64 (range is 0..=(2^64-1))
+        assert!(DIGITS > 0 && RHS_DIGITS > 0);
+        let (m, n) = (DIGITS, RHS_DIGITS);
+        assert!(m + n >= n);
+        let mut q = vec![0; m - n + 1]; // (m-n+1)-word quotient
+        let mut r = vec![0; n]; // n-word remainder
+        let (u, v) = (&self.0, &rhs.0); // m-word dividend, n-word divisor
+
+        // TODO
+        todo!()
+    }
 }
 
 impl<const DIGITS: usize> std::ops::Add<&Uint<DIGITS>> for Uint<DIGITS> {
@@ -29,7 +44,7 @@ impl<const DIGITS: usize> std::ops::Add<&Uint<DIGITS>> for Uint<DIGITS> {
 
     /// Adds two `Uint`s, returning `None` if overflow occurs.
     fn add(mut self, rhs: &Self) -> Self::Output {
-        // NOTE: Asusming that both Uints have DIGITS > 0
+        // NOTE: Assuming that both Uints have DIGITS > 0
         let mut carry = 0;
         for x in 0..DIGITS {
             let (l, r) = (self.0[x], rhs.0[x]);
@@ -48,13 +63,13 @@ impl<const DIGITS: usize> std::ops::Add<&Uint<DIGITS>> for Uint<DIGITS> {
                     }
                     None => {
                         self.0[x] = Base::MAX;
-                        carry = carry - (Base::MAX - sum);
-                    },
+                        carry -= Base::MAX - sum;
+                    }
                 },
                 None => {
                     self.0[x] = Base::MAX;
                     carry += r - (Base::MAX - l);
-                },
+                }
             };
         }
         if carry > 0 {
@@ -98,17 +113,6 @@ impl<const DIGITS: usize> From<u32> for Uint<DIGITS> {
     }
 }
 
-impl<const DIGITS: usize> From<u64> for Uint<DIGITS> {
-    /// Converts a `u64` into a `Uint`. **Panics** if `DIGITS` is less than 1.
-    fn from(n: u64) -> Self {
-        assert!(DIGITS > 0);
-        // NOTE: ASSUMES that u64 is <= Base in size
-        let mut arr = [0; DIGITS];
-        arr[0] = n as Base;
-        Self(arr)
-    }
-}
-
 impl<const DIGITS: usize> From<usize> for Uint<DIGITS> {
     /// Converts a `usize` into a `Uint`. **Panics** if `DIGITS` is less than 1.
     fn from(n: usize) -> Self {
@@ -120,14 +124,23 @@ impl<const DIGITS: usize> From<usize> for Uint<DIGITS> {
     }
 }
 
+impl<const DIGITS: usize> From<u64> for Uint<DIGITS> {
+    /// Converts a `u64` into a `Uint`. **Panics** if `DIGITS` is less than 1.
+    fn from(n: u64) -> Self {
+        assert!(DIGITS > 0);
+        // NOTE: ASSUMES that u64 is <= Base in size
+        let mut arr = [0; DIGITS];
+        arr[0] = n as Base;
+        Self(arr)
+    }
+}
+
 impl<const DIGITS: usize> From<u128> for Uint<DIGITS> {
     /// Converts a `u128` into a `Uint`. **Panics** if `DIGITS` is less than 1.
     fn from(n: u128) -> Self {
         assert!(DIGITS > 0);
-        // NOTE: ASSUMES that u128 is <= Base in size
-        let mut arr = [0; DIGITS];
-        arr[0] = n as Base;
-        Self(arr)
+        // TODO
+        todo!()
     }
 }
 
